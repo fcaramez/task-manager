@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/server/db/client";
 import { router, publicProcedure } from "../trpc";
 import * as bcrypt from "bcryptjs";
+import * as jwt from "jsonwebtoken";
+import { env } from "@/env/server.mjs";
 
 export const authRouter = router({
   signup: publicProcedure
@@ -72,7 +74,54 @@ export const authRouter = router({
         email: createdUser.email,
       };
     }),
-});
+  login: publicProcedure
+    .input(z.object({ email: z.string(), password: z.string() }))
+    .mutation(async ({ input }) => {
+      const { TOKEN_SECRET } = env;
+      const { email, password } = input;
 
-/*
- */
+      if (!email || !password) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "All fields are mandatory",
+        });
+      }
+
+      const userToFind = await prisma.user.findFirst({
+        where: {
+          email,
+        },
+      });
+
+      if (!userToFind) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User does not exist",
+        });
+      }
+
+      const comparePassword = bcrypt.compareSync(password, userToFind.password);
+
+      if (!comparePassword) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Wrong password",
+        });
+      }
+
+      const { id, username } = userToFind;
+
+      const payload = { id, username };
+
+      const authToken = jwt.sign(payload, TOKEN_SECRET, {
+        algorithm: "HS256",
+        expiresIn: "7d",
+      });
+
+      return {
+        message: "Logged in successfully",
+        success: true,
+        authToken,
+      };
+    }),
+});
