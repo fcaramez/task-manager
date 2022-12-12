@@ -25,14 +25,14 @@ export default function LoginPage() {
 
   console.log(errors);
 
-  const { error, data: mutationData, isSuccess } = loginMutation;
+  const { error, data: mutationData, isSuccess, isLoading } = loginMutation;
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     try {
       console.log("Im running");
       loginMutation.mutate(data);
 
-      if (!error && isSuccess) {
+      if (!error && isSuccess && !isLoading) {
         reset({
           email: "",
           password: "",

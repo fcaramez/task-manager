@@ -17,7 +17,6 @@ export const authRouter = router({
     )
     .mutation(async ({ input }) => {
       const { username, email, password } = input;
-      console.log(username);
       const saltRounds = 10;
 
       if (!username || !email || !password) {
@@ -125,5 +124,13 @@ export const authRouter = router({
           message: "Wrong password",
         });
       }
+    }),
+  verify: publicProcedure
+    .input(z.object({ authToken: z.string() }))
+    .query(async ({ input }) => {
+      const { authToken } = input;
+      const { TOKEN_SECRET } = env;
+
+      console.log(jwt.verify(authToken, TOKEN_SECRET));
     }),
 });
