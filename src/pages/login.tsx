@@ -25,14 +25,14 @@ export default function LoginPage() {
 
   console.log(errors);
 
-  const { error, data: mutationData } = loginMutation;
+  const { error, data: mutationData, isSuccess } = loginMutation;
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     try {
       console.log("Im running");
       loginMutation.mutate(data);
 
-      if (!error) {
+      if (!error && isSuccess) {
         reset({
           email: "",
           password: "",
@@ -46,7 +46,7 @@ export default function LoginPage() {
         Router.push("/tasks");
       } else {
         setErrorMessage(error?.message);
-        throw new Error(error.message);
+        throw new Error(error?.message);
       }
     } catch (err) {
       setErrorMessage(error?.message);

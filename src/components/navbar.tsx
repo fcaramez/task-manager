@@ -1,3 +1,4 @@
+import { logout } from "@/utils/helpers";
 import Link from "next/link";
 
 export default function Navbar() {
@@ -34,7 +35,7 @@ export default function Navbar() {
             </ul>
           </li>
           <li>
-            <Link href={"/"}>Logout</Link>
+            <button onClick={() => logout()}>Logout</button>
           </li>
         </ul>
       </div>
