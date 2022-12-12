@@ -1,3 +1,4 @@
+import { authenticateUser } from "@/utils/helpers";
 import { trpc } from "@/utils/trpc";
 import Router from "next/router";
 import { useState } from "react";
@@ -6,15 +7,14 @@ import { useForm } from "react-hook-form";
 
 type FormInputs = {
   email: string;
-  username: string;
   password: string;
 };
 
-export default function SignupPage() {
+export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
     undefined
   );
-  const signupMutation = trpc.auth.signup.useMutation();
+  const loginMutation = trpc.auth.login.useMutation();
 
   const {
     register,
@@ -25,19 +25,25 @@ export default function SignupPage() {
 
   console.log(errors);
 
-  const { error } = signupMutation;
+  const { error, data: mutationData } = loginMutation;
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     try {
       console.log("Im running");
-      signupMutation.mutate(data);
+      loginMutation.mutate(data);
+
       if (!error) {
         reset({
-          username: "",
           email: "",
           password: "",
         });
-        Router.push("/login");
+        const userData = {
+          username: mutationData?.username,
+          email: mutationData?.email,
+          authToken: mutationData?.authToken,
+        };
+        authenticateUser(userData);
+        Router.push("/tasks");
       } else {
         setErrorMessage(error?.message);
         throw new Error(error.message);
@@ -46,28 +52,16 @@ export default function SignupPage() {
       setErrorMessage(error?.message);
     }
   };
-
   return (
     <div className="grid place-content-center place-items-center">
-      <div className="w-64 justify-center border-2 border-solid border-emerald-300 p-48">
+      <div className="w-64 justify-center border-2 border-solid border-emerald-200 p-48">
         <h1 className="mb-7 grid w-auto place-content-center place-items-center text-center text-4xl text-white">
-          Signup
+          Login
         </h1>
         <form
           className="grid flex-col justify-center "
           onSubmit={handleSubmit(onSubmit)}
         >
-          <input
-            className="input-bordered input my-2 h-11 w-auto max-w-xs"
-            type="text"
-            placeholder="username"
-            {...register("username", { required: "Username is required" })}
-          />
-          {errors.username && (
-            <p className="my-2 rounded-md bg-red-400 p-2 text-center text-white">
-              {errors.username.message}
-            </p>
-          )}
           <input
             className="input-bordered input my-2 h-11 w-auto max-w-xs"
             type="email"

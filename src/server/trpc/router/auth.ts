@@ -102,26 +102,28 @@ export const authRouter = router({
 
       const comparePassword = bcrypt.compareSync(password, userToFind.password);
 
-      if (!comparePassword) {
+      if (comparePassword) {
+        const { id, username, email } = userToFind;
+
+        const payload = { id, username };
+
+        const authToken = jwt.sign(payload, TOKEN_SECRET, {
+          algorithm: "HS256",
+          expiresIn: "7d",
+        });
+
+        return {
+          message: "Logged in successfully",
+          success: true,
+          authToken: authToken,
+          username: username,
+          email: email,
+        };
+      } else {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Wrong password",
         });
       }
-
-      const { id, username } = userToFind;
-
-      const payload = { id, username };
-
-      const authToken = jwt.sign(payload, TOKEN_SECRET, {
-        algorithm: "HS256",
-        expiresIn: "7d",
-      });
-
-      return {
-        message: "Logged in successfully",
-        success: true,
-        authToken,
-      };
     }),
 });
